@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+  output = "../ER-Diagram.png"
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  fullName          String
+  password          String
+  role              Role
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  appointments      Appointment[]      @relation("UserAppointments")
+  staffAppointments Appointment[]      @relation("StaffAppointments")
+  availabilitySlots AvailabilitySlot[] @relation("UserAvailabilitySlots")
+  refreshToken      String? // New field for storing the refresh token
+}
+
+model Appointment {
+  id        String            @id @default(cuid())
+  userId    String
+  staffId   String
+  startTime DateTime
+  endTime   DateTime
+  status    AppointmentStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  user  User @relation("UserAppointments", fields: [userId], references: [id])
+  staff User @relation("StaffAppointments", fields: [staffId], references: [id])
+
+  @@index([userId, startTime])
+  @@index([staffId, startTime])
+}
+
+model AvailabilitySlot {
+  id        String   @id @default(cuid())
+  staffId   String
+  startTime DateTime
+  endTime   DateTime
+  status       AppointmentStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  staff User @relation("UserAvailabilitySlots", fields: [staffId], references: [id])
+}
+
+enum Role {
+  USER
+  STAFF
+  ADMIN
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELED
+  COMPLETED
+}

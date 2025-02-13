@@ -1,0 +1,4 @@
+node_modules
+00-extras
+# Keep environment variables out of version control
+# .env

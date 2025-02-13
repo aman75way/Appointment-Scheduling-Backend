@@ -1,0 +1,417 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Appointment Scheduling API",
+    "version": "1.0.0",
+    "description": "API for managing appointments, users, and availability slots for clinics, salons, or coworking spaces."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api"
+    }
+  ],
+  "paths": {
+    "/user/signup": {
+      "post": {
+        "summary": "Create a new user",
+        "operationId": "createUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fullName": {
+                    "type": "string",
+                    "example": "Kartik"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "kartik@example.com"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": ["USER", "ADMIN", "STAFF"],
+                    "example": "USER"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "123123"
+                  },
+                  "confirmPassword": {
+                    "type": "string",
+                    "example": "123123"
+                  }
+                },
+                "required": ["fullName", "email", "role", "password", "confirmPassword"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User successfully created"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/user/login": {
+      "post": {
+        "summary": "Log in a user",
+        "operationId": "loginUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "manav@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "123123"
+                  }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully logged in"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/user/logout": {
+      "post": {
+        "summary": "Log out the user",
+        "operationId": "logoutUser",
+        "responses": {
+          "200": {
+            "description": "Successfully logged out"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/user": {
+      "get": {
+        "summary": "Get logged-in user details",
+        "operationId": "getLoggedInUser",
+        "responses": {
+          "200": {
+            "description": "Logged-in user details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/appointment/create": {
+      "post": {
+        "summary": "Create a new appointment",
+        "operationId": "createAppointment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "availabilitySlotId": {
+                    "type": "string",
+                    "example": "cm73a5qhc0009k2po4zv432tu"
+                  },
+                  "staffId": {
+                    "type": "string",
+                    "example": "cm738416s0002k2ajm297o01z"
+                  }
+                },
+                "required": ["availabilitySlotId", "staffId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Appointment created successfully"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/appointment/{appointmentId}": {
+      "patch": {
+        "summary": "Change the status of an appointment",
+        "operationId": "updateAppointmentStatus",
+        "parameters": [
+          {
+            "name": "appointmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "cm73b496h0001k2tx7bzstqvc"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["PENDING", "CONFIRMED", "CANCELLED"],
+                    "example": "CONFIRMED"
+                  }
+                },
+                "required": ["status"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Appointment status updated"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an appointment",
+        "operationId": "deleteAppointment",
+        "parameters": [
+          {
+            "name": "appointmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "cm73b496h0001k2tx7bzstqvc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Appointment deleted successfully"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/appointment/": {
+      "get": {
+        "summary": "Get all appointments",
+        "operationId": "getAppointments",
+        "responses": {
+          "200": {
+            "description": "List of appointments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Appointment"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/availability/create": {
+      "post": {
+        "summary": "Create an availability slot",
+        "operationId": "createAvailabilitySlot",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "startTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2025-02-05T09:30:00Z"
+                  },
+                  "endTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2025-02-05T11:30:00Z"
+                  }
+                },
+                "required": ["startTime", "endTime"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Availability slot created successfully"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/availability/list": {
+      "get": {
+        "summary": "Get availability of a staff",
+        "operationId": "getStaffAvailability",
+        "parameters": [
+          {
+            "name": "staffId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "cm738416s0002k2ajm297o01z"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Availability list retrieved"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/availability/update": {
+      "put": {
+        "summary": "Update an availability slot",
+        "operationId": "updateAvailabilitySlot",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "example": "cm739d5xg0001k2kndlgn0uhm"
+                  },
+                  "startTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2025-02-18T10:00:00.000Z"
+                  },
+                  "endTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2025-02-18T12:00:00.000Z"
+                  }
+                },
+                "required": ["id", "startTime", "endTime"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Availability slot updated"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/availability/delete/{availabilityId}": {
+      "delete": {
+        "summary": "Delete an availability slot",
+        "operationId": "deleteAvailabilitySlot",
+        "parameters": [
+          {
+            "name": "availabilityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "cm739jh8f0001k2mxukojhmso"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Availability slot deleted successfully"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "fullName": { "type": "string" },
+          "email": { "type": "string" },
+          "role": { "type": "string" },
+          "password": { "type": "string" },
+          "confirmPassword": { "type": "string" }
+        }
+      },
+      "Appointment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "staffId": { "type": "string" },
+          "availabilitySlotId": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      },
+      "AvailabilitySlot": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "startTime": { "type": "string", "format": "date-time" },
+          "endTime": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}
