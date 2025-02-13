@@ -1,6 +1,7 @@
 import { AppointmentStatus } from "@prisma/client";
 import { AppointmentDTO } from "./appointment.dto";
 import prisma from "../common/services/database.service";
+import { sendAppointmentEmail } from "../common/services/email.service";
 
 
 
@@ -29,35 +30,16 @@ export const createAppointment = async (
   staffId: string,
   availabilitySlotId: string
 ): Promise<AppointmentDTO> => {
-  // Step 1: Find the availability slot by ID
   const availabilitySlot = await prisma.availabilitySlot.findUnique({
     where: { id: availabilitySlotId },
   });
 
-  if (!availabilitySlot) {
-    throw new Error("The selected availability slot does not exist.");
-  }
+  if (!availabilitySlot) throw new Error("The selected availability slot does not exist.");
 
-  // Step 2: Ensure the staffId in the slot matches the provided staffId
   if (availabilitySlot.staffId !== staffId) {
     throw new Error("The selected slot does not belong to the specified staff member.");
   }
 
-  // Step 3: Check for conflicting appointments for the selected staff
-  const conflictingAppointments = await prisma.appointment.findMany({
-    where: {
-      OR: [
-        { startTime: { lt: availabilitySlot.endTime } },
-        { endTime: { gt: availabilitySlot.startTime } },
-      ],
-    },
-  });
-
-  if (conflictingAppointments.length > 0) {
-    throw new Error("Appointment time conflicts with existing appointments.");
-  }
-
-  // Step 4: Create the appointment
   const appointment = await prisma.appointment.create({
     data: {
       userId,
@@ -66,14 +48,22 @@ export const createAppointment = async (
       endTime: availabilitySlot.endTime,
       status: AppointmentStatus.CONFIRMED,
     },
+    include: {
+      user: true, // Fetch user details for email
+      staff: true, // Fetch staff details for email
+    },
   });
 
-  // Step 5: After creating the appointment, remove the corresponding availability slot
-  await prisma.availabilitySlot.delete({
-    where: { id: availabilitySlotId },
-  });
+  await prisma.availabilitySlot.delete({ where: { id: availabilitySlotId } });
 
-  // Step 6: Return the created appointment in the correct format
+  // Send confirmation email
+  if (appointment.user.email) {
+    await sendAppointmentEmail(
+      appointment.user.email,
+      appointment.startTime.toISOString()
+    );
+  }
+
   return {
     ...appointment,
     appointmentTime: appointment.startTime.toISOString(),
